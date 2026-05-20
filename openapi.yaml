@@ -1,0 +1,101 @@
+openapi: 3.0.3
+info:
+  title: Department Hierarchy API
+  version: 1.0.0
+  description: API для управления иерархией департаментов и проверки структуры на циклические зависимости.
+paths:
+  /departments/{id}/check-hierarchy/:
+    post:
+      summary: Проверка и изменение родительского департамента
+      description: |
+        Принимает ID целевого департамента в URL и ID нового родителя в теле запроса. 
+        Выполняет линейный обход дерева вверх для предотвращения зацикливания.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID текущего департамента, для которого меняется родитель.
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - parent
+              properties:
+                parent:
+                  type: integer
+                  description: ID нового родительского департамента.
+                  example: 3
+                max_depth:
+                  type: integer
+                  description: Максимальная глубина (игнорируется, если детей запоминать не надо).
+                  minimum: 1
+                  maximum: 5
+                  example: 3
+      responses:
+        '200':
+          description: Успешное обновление. Ротация выполнена, цикл не обнаружен.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Department'
+        '400':
+          description: Ошибка валидации (например, пропущено обязательное поле `parent`).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  parent:
+                    type: array
+                    items:
+                      type: string
+                    example: ["Поле parent обязательно для проверки."]
+        '404':
+          description: Текущий или новый родительский департамент не найден в базе данных.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "Страница не найдена."
+        '409':
+          description: Конфликт в структуре данных. Обнаружен бесконечный цикл.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  department:
+                    type: array
+                    items:
+                      type: string
+                    example: ["Ваш родитель не подходит: данное перемещение создает бесконечный цикл в иерархии."]
+
+components:
+  schemas:
+    Department:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          example: 5
+        name:
+          type: string
+          nullable: true
+          example: "Бухгалтерия"
+        parent:
+          type: integer
+          nullable: true
+          example: 3
+        created_at:
+          type: string
+          format: date-time
+          example: "2026-05-20T08:28:00Z"
