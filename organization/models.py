@@ -8,7 +8,7 @@ class Department(models.Model):
     created_at = models.DateTimeField(blank=True, null=True)
 
     class Meta:
-        #managed = False
+        managed = False
         db_table = 'Department'
 
 
@@ -21,5 +21,5 @@ class Employee(models.Model):
     created_at = models.DateTimeField(blank=True, null=True)
 
     class Meta:
-        #managed = False
+        managed = False
         db_table = 'Employee'

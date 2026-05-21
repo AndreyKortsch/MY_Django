@@ -1,6 +1,19 @@
 version: '3.8'
 
 services:
+  db:
+    image: postgres:15
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: Organization
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 12581258
+    ports:
+      - "5432:5432"
+    networks:
+      - django_network
+  
   web:
     build: .
     command: python manage.py runserver 0.0.0.0:8000
@@ -9,18 +22,22 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DEBUG=1
+      - POSTGRES_NAME=Organization
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=12581258
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_HOST_AUTH_METHOD=trust
     depends_on:
       - db
-
-  db:
-    image: postgres:15
-    environment:
-      POSTGRES_DB: Organization
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 12581258
-    volumes:
-      - postgres_data:/var/lib/postgresql/data/
+    networks:
+      - django_network 
 
 volumes:
   postgres_data:
+
+networks:
+  django_network:
+    driver: bridge
+
+

@@ -1,17 +1,22 @@
-FROM python:3.11-slim
+FROM python:3.8
 
-# Устанавливаем рабочую директорию
+# Установка переменных окружения
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+# Установка рабочей директории
 WORKDIR /app
 
-# Копируем requirements и устанавливаем зависимости
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Установка зависимостей для сборки psycopg2 и PostgreSQL
+RUN apt-get update && apt-get install -y \
+    gcc \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-# Копируем исходный код
-COPY . .
+# Установка зависимостей Python
+COPY requirements.txt /app/
+RUN pip install --upgrade pip
+RUN pip install -r requirements.txt
 
-# Открываем порт
-EXPOSE 8000
-
-# Команда для запуска приложения
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+# Копирование проекта
+COPY . /app/
